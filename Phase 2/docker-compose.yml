@@ -1,0 +1,95 @@
+version: "1"
+services:
+  mongo1:
+    container_name: mongo1
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data/db-mongo-1:/data/db
+    networks:
+      - frontpack
+  mongo2:
+    container_name: mongo2
+    image: mongo:latest
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./data/db-mongo-2:/data/db
+    networks:
+      - frontpack
+  mongo3:
+    container_name: mongo3
+    image: mongo:latest
+    ports:
+      - "27019:27017"
+    volumes:
+      - ./data/db-mongo-3:/data/db
+    networks:
+      - frontpack
+  ds-proj-1-back1:
+    container_name: ds_proj_1_backend1
+    image: cse586_ds_proj_1
+    restart: always
+    build: .
+    ports:
+      - "8090:8090"
+    command: npm start
+    environment:
+      - IS_LEADER=${IS_LEADER:-true}
+      - MONGO_NAME=${MONGO_NAME:-mongo1}
+    depends_on:
+      - mongo1
+    networks:
+      - frontpack
+  ds-proj-1-back2:
+    container_name: ds_proj_1_backend2
+    image: cse586_ds_proj_1
+    restart: always
+    build: .
+    ports:
+      - "8091:8091"
+    command: npm start
+    environment:
+      - IS_LEADER=${IS_LEADER:-false}
+      - MONGO_NAME=${MONGO_NAME:-mongo2}
+    depends_on:
+      - ds-proj-1-back1
+      - mongo2
+    networks:
+      - frontpack
+  ds-proj-1-back3:
+    container_name: ds_proj_1_backend3
+    image: cse586_ds_proj_1
+    restart: always
+    build: .
+    ports:
+      - "8092:8092"
+    command: npm start
+    environment:
+      - IS_LEADER=${IS_LEADER:-false}
+      - MONGO_NAME=${MONGO_NAME:-mongo3}
+    depends_on:
+      - ds-proj-1-back1
+      - ds-proj-1-back2
+      - mongo3
+    networks:
+      - frontpack
+  ds-proj-1-ui:
+    container_name: ds_proj_1_frontend
+    image: cse586_ds_proj_1
+    restart: always
+    build: .
+    ports:
+      - "8082:8082"
+    command: node index_ui.js
+    depends_on:
+      - ds-proj-1
+networks:
+  frontpack:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.0.0/24
+          gateway: 10.10.0.1
