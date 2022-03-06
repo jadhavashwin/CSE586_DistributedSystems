@@ -1,0 +1,29 @@
+version: "1"
+services:
+  mongo:
+    container_name: cse586_mongodb_pa
+    image: mongo
+    volumes:
+      - ./data:/data/db
+    ports:
+      - "27017:27017"
+  ds-proj-1-backend:
+    container_name: ds_proj_1_backend
+    image: cse586_ds_proj_1
+    restart: always
+    build: .
+    ports:
+      - "8090:8090"
+    command: npm start
+    depends_on:
+      - mongo
+  ds-proj-1-ui:
+    container_name: ds_proj_1_frontend
+    image: cse586_ds_proj_1
+    restart: always
+    build: .
+    ports:
+      - "8082:8082"
+    command: node index_ui.js
+    depends_on:
+      - ds-proj-1
